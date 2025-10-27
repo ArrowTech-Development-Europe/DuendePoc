@@ -22,7 +22,8 @@ try
     // Configure Data Protection for multi-pod scenarios
     builder.Services.AddDataProtection()
         .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
-        .SetApplicationName("DuendeIdentityServer");
+        .SetApplicationName("DuendeIdentityServer")
+        .SetDefaultKeyLifetime(TimeSpan.FromDays(90));
 
     // Configure forwarded headers for running behind a reverse proxy
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
@@ -68,6 +69,11 @@ try
 
             // Save tokens for debugging
             options.SaveTokens = true;
+
+            // Configure correlation cookie with data protection
+            options.CorrelationCookie.SecurePolicy = Microsoft.AspNetCore.Http.CookieSecurePolicy.Always;
+            options.CorrelationCookie.SameSite = Microsoft.AspNetCore.Http.SameSiteMode.None;
+            options.CorrelationCookie.HttpOnly = true;
         });
 
     builder.Services
