@@ -9,6 +9,18 @@ builder.Services.AddSwaggerGen();
 
 var authority = builder.Configuration["Authority"] ?? "https://localhost:5001";
 
+// Add CORS support for webapp
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowWebApp", policy =>
+    {
+        policy.WithOrigins("https://duende-webapp.k8s.arrowtech.dev")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
@@ -38,6 +50,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseCors("AllowWebApp");
 app.UseAuthentication();
 app.UseAuthorization();
 
