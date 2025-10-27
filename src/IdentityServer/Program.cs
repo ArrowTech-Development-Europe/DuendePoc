@@ -29,6 +29,18 @@ try
 
     var webClientUrl = builder.Configuration["WebClientUrl"];
 
+    // Add CORS support for the web client
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowWebApp", policy =>
+        {
+            policy.WithOrigins(webClientUrl ?? "https://duende-webapp.k8s.arrowtech.dev")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+    });
+
     builder.Services
         .AddIdentityServer(options =>
         {
@@ -55,6 +67,7 @@ try
         app.UseDeveloperExceptionPage();
     }
 
+    app.UseCors("AllowWebApp");
     app.UseStaticFiles();
     app.UseRouting();
     app.UseIdentityServer();
