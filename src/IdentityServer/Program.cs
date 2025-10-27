@@ -41,6 +41,24 @@ try
         });
     });
 
+    // Add external authentication providers
+    builder.Services.AddAuthentication()
+        .AddMicrosoftAccount("Microsoft", options =>
+        {
+            options.SignInScheme = Duende.IdentityServer.IdentityServerConstants.ExternalCookieAuthenticationScheme;
+            options.ClientId = builder.Configuration["AzureAd:ClientId"] ?? throw new InvalidOperationException("AzureAd:ClientId is required");
+            options.ClientSecret = builder.Configuration["AzureAd:ClientSecret"] ?? throw new InvalidOperationException("AzureAd:ClientSecret is required");
+            options.TenantId = builder.Configuration["AzureAd:TenantId"] ?? throw new InvalidOperationException("AzureAd:TenantId is required");
+
+            // Request additional scopes
+            options.Scope.Add("openid");
+            options.Scope.Add("profile");
+            options.Scope.Add("email");
+
+            // Save tokens for debugging
+            options.SaveTokens = true;
+        });
+
     builder.Services
         .AddIdentityServer(options =>
         {
