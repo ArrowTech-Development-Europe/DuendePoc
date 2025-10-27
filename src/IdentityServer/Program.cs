@@ -18,6 +18,11 @@ try
     // Add services to the container
     builder.Services.AddRazorPages();
 
+    // Configure Data Protection for multi-pod scenarios
+    builder.Services.AddDataProtection()
+        .PersistKeysToFileSystem(new DirectoryInfo("/app/keys"))
+        .SetApplicationName("DuendeIdentityServer");
+
     // Configure forwarded headers for running behind a reverse proxy
     builder.Services.Configure<ForwardedHeadersOptions>(options =>
     {
