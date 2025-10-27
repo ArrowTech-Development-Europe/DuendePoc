@@ -58,6 +58,23 @@ public static class Config
                 ClientSecrets = { new Secret("secret".Sha256()) },
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
                 AllowedScopes = { "api1" }
+            },
+            // SPA client using Resource Owner Password
+            new Client
+            {
+                ClientId = "spa",
+                ClientName = "SPA Client",
+                ClientSecrets = { new Secret("secret".Sha256()) },
+                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+                AllowedScopes = new List<string>
+                {
+                    "openid",
+                    "profile",
+                    "email",
+                    "api1"
+                },
+                AllowOfflineAccess = true,
+                RefreshTokenUsage = TokenUsage.ReUse
             }
         };
     }

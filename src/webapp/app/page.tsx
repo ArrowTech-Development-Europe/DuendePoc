@@ -1,49 +1,73 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UserManager, User } from 'oidc-client-ts';
 
-const oidcConfig = {
-  authority: 'https://duende-identity.k8s.arrowtech.dev',
-  client_id: 'mvc',
-  client_secret: 'secret',
-  redirect_uri: typeof window !== 'undefined' ? `${window.location.origin}/callback` : '',
-  response_type: 'code',
-  scope: 'openid profile email api1',
-  post_logout_redirect_uri: typeof window !== 'undefined' ? window.location.origin : '',
-};
+interface UserProfile {
+  name: string;
+  email: string;
+  sub: string;
+}
 
 export default function Home() {
-  const [user, setUser] = useState<User | null>(null);
-  const [userManager, setUserManager] = useState<UserManager | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<UserProfile | null>(null);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [token, setToken] = useState<string | null>(null);
   const [apiResponse, setApiResponse] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
-  useEffect(() => {
-    const manager = new UserManager(oidcConfig);
-    setUserManager(manager);
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-    manager.getUser().then((user) => {
-      setUser(user);
-      setLoading(false);
-      if (user?.access_token) {
-        setToken(user.access_token);
+    try {
+      // Call token endpoint with password grant
+      const response = await fetch('https://duende-identity.k8s.arrowtech.dev/connect/token', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          grant_type: 'password',
+          client_id: 'spa',
+          client_secret: 'secret',
+          username: username,
+          password: password,
+          scope: 'openid profile email api1',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid username or password');
       }
-    });
-  }, []);
 
-  const handleLogin = async () => {
-    if (userManager) {
-      await userManager.signinRedirect();
+      const data = await response.json();
+      setToken(data.access_token);
+
+      // Decode the token to get user info (simple base64 decode of JWT payload)
+      const payload = JSON.parse(atob(data.access_token.split('.')[1]));
+      setUser({
+        name: payload.name || username,
+        email: payload.email || '',
+        sub: payload.sub || '',
+      });
+
+      setUsername('');
+      setPassword('');
+    } catch (err: any) {
+      setError(err.message || 'Login failed');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    if (userManager) {
-      await userManager.signoutRedirect();
-    }
+  const handleLogout = () => {
+    setUser(null);
+    setToken(null);
+    setApiResponse(null);
   };
 
   const callApi = async () => {
@@ -62,18 +86,6 @@ export default function Home() {
       setApiResponse({ error: 'Failed to call API' });
     }
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="w-16 h-16 border-4 border-white border-t-transparent rounded-full"
-        />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 overflow-hidden">
@@ -151,27 +163,71 @@ export default function Home() {
                       <p className="text-white/80 mt-2">Sign in to continue</p>
                     </div>
 
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleLogin}
-                      className="w-full bg-white text-purple-600 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2"
-                    >
-                      <svg
-                        className="w-6 h-6"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                    <form onSubmit={handleLogin} className="space-y-4">
+                      <div>
+                        <input
+                          type="text"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          placeholder="Username"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                          required
                         />
-                      </svg>
-                      <span>Sign In with Duende</span>
-                    </motion.button>
+                      </div>
+                      <div>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Password"
+                          className="w-full px-4 py-3 rounded-xl bg-white/20 border border-white/30 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                          required
+                        />
+                      </div>
+
+                      {error && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="bg-red-500/20 border border-red-500/50 rounded-xl p-3 text-white text-sm"
+                        >
+                          {error}
+                        </motion.div>
+                      )}
+
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-white text-purple-600 font-semibold py-4 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {loading ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            className="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full"
+                          />
+                        ) : (
+                          <>
+                            <svg
+                              className="w-6 h-6"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"
+                              />
+                            </svg>
+                            <span>Sign In</span>
+                          </>
+                        )}
+                      </motion.button>
+                    </form>
 
                     <div className="text-center text-white/60 text-sm">
                       <p>Test Users:</p>
@@ -195,23 +251,23 @@ export default function Home() {
                         className="inline-block"
                       >
                         <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-blue-500 rounded-full flex items-center justify-center text-white text-4xl font-bold mx-auto shadow-xl">
-                          {user.profile.name?.[0]?.toUpperCase() || 'U'}
+                          {user.name?.[0]?.toUpperCase() || 'U'}
                         </div>
                       </motion.div>
                       <h2 className="text-2xl font-bold text-white mt-4">
-                        {user.profile.name || 'User'}
+                        {user.name || 'User'}
                       </h2>
-                      <p className="text-white/80">{user.profile.email || 'No email'}</p>
+                      <p className="text-white/80">{user.email || 'No email'}</p>
                     </div>
 
                     <div className="bg-white/10 rounded-xl p-4 space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-white/70">Subject:</span>
-                        <span className="text-white font-mono text-xs">{user.profile.sub?.substring(0, 8)}...</span>
+                        <span className="text-white font-mono text-xs">{user.sub?.substring(0, 8)}...</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-white/70">Token Expires:</span>
-                        <span className="text-white">{new Date((user.expires_at || 0) * 1000).toLocaleTimeString()}</span>
+                        <span className="text-white/70">Status:</span>
+                        <span className="text-green-300">Authenticated</span>
                       </div>
                     </div>
 
