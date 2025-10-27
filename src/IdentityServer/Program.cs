@@ -1,4 +1,5 @@
 using Serilog;
+using Microsoft.AspNetCore.DataProtection;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
