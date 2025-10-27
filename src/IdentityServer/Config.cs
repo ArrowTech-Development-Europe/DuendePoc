@@ -18,8 +18,11 @@ public static class Config
             new ApiScope("api1", "My API")
         };
 
-    public static IEnumerable<Client> Clients =>
-        new Client[]
+    public static IEnumerable<Client> GetClients(string? webClientUrl = null)
+    {
+        var clientUrl = webClientUrl ?? "https://localhost:5002";
+
+        return new Client[]
         {
             // MVC client using authorization code flow
             new Client
@@ -31,10 +34,10 @@ public static class Config
                 AllowedGrantTypes = GrantTypes.Code,
 
                 // where to redirect to after login
-                RedirectUris = { "https://localhost:5002/signin-oidc" },
+                RedirectUris = { $"{clientUrl}/signin-oidc" },
 
                 // where to redirect to after logout
-                PostLogoutRedirectUris = { "https://localhost:5002/signout-callback-oidc" },
+                PostLogoutRedirectUris = { $"{clientUrl}/signout-callback-oidc" },
 
                 AllowedScopes = new List<string>
                 {
@@ -46,6 +49,16 @@ public static class Config
 
                 RequirePkce = true,
                 AllowPlainTextPkce = false
+            },
+            // Client credentials for API-to-API
+            new Client
+            {
+                ClientId = "client",
+                ClientName = "Client Credentials Client",
+                ClientSecrets = { new Secret("secret".Sha256()) },
+                AllowedGrantTypes = GrantTypes.ClientCredentials,
+                AllowedScopes = { "api1" }
             }
         };
+    }
 }

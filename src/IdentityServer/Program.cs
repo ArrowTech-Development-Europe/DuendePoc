@@ -18,6 +18,8 @@ try
     // Add services to the container
     builder.Services.AddRazorPages();
 
+    var webClientUrl = builder.Configuration["WebClientUrl"];
+
     builder.Services
         .AddIdentityServer(options =>
         {
@@ -32,7 +34,7 @@ try
         .AddTestUsers(IdentityServer.TestUsers.Users)
         .AddInMemoryIdentityResources(IdentityServer.Config.IdentityResources)
         .AddInMemoryApiScopes(IdentityServer.Config.ApiScopes)
-        .AddInMemoryClients(IdentityServer.Config.Clients);
+        .AddInMemoryClients(IdentityServer.Config.GetClients(webClientUrl));
 
     var app = builder.Build();
 

@@ -7,10 +7,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var authority = builder.Configuration["Authority"] ?? "https://localhost:5001";
+
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
     {
-        options.Authority = "https://localhost:5001";
+        options.Authority = authority;
         options.RequireHttpsMetadata = true;
 
         options.TokenValidationParameters = new TokenValidationParameters
