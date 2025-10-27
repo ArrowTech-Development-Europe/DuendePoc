@@ -58,7 +58,7 @@ jobs:
             ${{ env.IMAGE_PREFIX }}/duende-poc-api:latest
             ${{ env.IMAGE_PREFIX }}/duende-poc-api:${{ github.sha }}
 
-  build-webclient:
+  build-webapp:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -73,11 +73,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push WebClient
+      - name: Build and push WebApp
         uses: docker/build-push-action@v5
         with:
-          context: ./src/WebClient
+          context: ./src/webapp
           push: true
           tags: |
-            ${{ env.IMAGE_PREFIX }}/duende-poc-webclient:latest
-            ${{ env.IMAGE_PREFIX }}/duende-poc-webclient:${{ github.sha }}
+            ${{ env.IMAGE_PREFIX }}/duende-poc-webapp:latest
+            ${{ env.IMAGE_PREFIX }}/duende-poc-webapp:${{ github.sha }}

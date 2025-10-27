@@ -34,10 +34,10 @@ public static class Config
                 AllowedGrantTypes = GrantTypes.Code,
 
                 // where to redirect to after login
-                RedirectUris = { $"{clientUrl}/signin-oidc" },
+                RedirectUris = { $"{clientUrl}/signin-oidc", $"{clientUrl}/callback" },
 
                 // where to redirect to after logout
-                PostLogoutRedirectUris = { $"{clientUrl}/signout-callback-oidc" },
+                PostLogoutRedirectUris = { $"{clientUrl}/signout-callback-oidc", $"{clientUrl}" },
 
                 AllowedScopes = new List<string>
                 {
