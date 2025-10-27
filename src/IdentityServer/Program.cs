@@ -52,7 +52,7 @@ try
             // see https://docs.duendesoftware.com/identityserver/v7/fundamentals/resources/
             options.EmitStaticAudienceClaim = true;
         })
-        .AddTestUsers(IdentityServer.TestUsers.Users)
+        .AddTestUsers(IdentityServerHost.TestUsers.Users)
         .AddInMemoryIdentityResources(IdentityServer.Config.IdentityResources)
         .AddInMemoryApiScopes(IdentityServer.Config.ApiScopes)
         .AddInMemoryClients(IdentityServer.Config.GetClients(webClientUrl));
