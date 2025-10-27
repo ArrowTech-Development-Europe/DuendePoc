@@ -18,6 +18,15 @@ try
     // Add services to the container
     builder.Services.AddRazorPages();
 
+    // Configure forwarded headers for running behind a reverse proxy
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor |
+                                   Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+        options.KnownNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+
     var webClientUrl = builder.Configuration["WebClientUrl"];
 
     builder.Services
@@ -38,6 +47,7 @@ try
 
     var app = builder.Build();
 
+    app.UseForwardedHeaders();
     app.UseSerilogRequestLogging();
 
     if (app.Environment.IsDevelopment())
