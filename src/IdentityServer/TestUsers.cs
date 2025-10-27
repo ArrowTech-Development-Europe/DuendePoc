@@ -1,45 +1,63 @@
+// Copyright (c) Duende Software. All rights reserved.
+// See LICENSE in the project root for license information.
+
 using System.Security.Claims;
+using System.Text.Json;
+using Duende.IdentityModel;
 using Duende.IdentityServer;
 using Duende.IdentityServer.Test;
 
-namespace IdentityServer;
+namespace IdentityServerHost;
 
-public class TestUsers
+public static class TestUsers
 {
-    public static List<TestUser> Users =>
-        new List<TestUser>
+    public static List<TestUser> Users
+    {
+        get
         {
-            new TestUser
+            var address = new
             {
-                SubjectId = "1",
-                Username = "alice",
-                Password = "alice",
-                Claims =
-                {
-                    new Claim("name", "Alice Smith"),
-                    new Claim("given_name", "Alice"),
-                    new Claim("family_name", "Smith"),
-                    new Claim("email", "alice@example.com"),
-                    new Claim("email_verified", "true", ClaimValueTypes.Boolean),
-                    new Claim("role", "admin"),
-                    new Claim("website", "http://alice.com")
-                }
-            },
-            new TestUser
+                street_address = "One Hacker Way",
+                locality = "Heidelberg",
+                postal_code = "69118",
+                country = "Germany"
+            };
+                
+            return new List<TestUser>
             {
-                SubjectId = "2",
-                Username = "bob",
-                Password = "bob",
-                Claims =
+                new TestUser
                 {
-                    new Claim("name", "Bob Johnson"),
-                    new Claim("given_name", "Bob"),
-                    new Claim("family_name", "Johnson"),
-                    new Claim("email", "bob@example.com"),
-                    new Claim("email_verified", "true", ClaimValueTypes.Boolean),
-                    new Claim("role", "user"),
-                    new Claim("website", "http://bob.com")
+                    SubjectId = "1",
+                    Username = "alice",
+                    Password = "alice",
+                    Claims =
+                    {
+                        new Claim(JwtClaimTypes.Name, "Alice Smith"),
+                        new Claim(JwtClaimTypes.GivenName, "Alice"),
+                        new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                        new Claim(JwtClaimTypes.Email, "AliceSmith@email.com"),
+                        new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
+                        new Claim(JwtClaimTypes.WebSite, "http://alice.com"),
+                        new Claim(JwtClaimTypes.Address, JsonSerializer.Serialize(address), IdentityServerConstants.ClaimValueTypes.Json)
+                    }
+                },
+                new TestUser
+                {
+                    SubjectId = "2",
+                    Username = "bob",
+                    Password = "bob",
+                    Claims =
+                    {
+                        new Claim(JwtClaimTypes.Name, "Bob Smith"),
+                        new Claim(JwtClaimTypes.GivenName, "Bob"),
+                        new Claim(JwtClaimTypes.FamilyName, "Smith"),
+                        new Claim(JwtClaimTypes.Email, "BobSmith@email.com"),
+                        new Claim(JwtClaimTypes.EmailVerified, "true", ClaimValueTypes.Boolean),
+                        new Claim(JwtClaimTypes.WebSite, "http://bob.com"),
+                        new Claim(JwtClaimTypes.Address, JsonSerializer.Serialize(address), IdentityServerConstants.ClaimValueTypes.Json)
+                    }
                 }
-            }
-        };
+            };
+        }
+    }
 }

@@ -59,13 +59,29 @@ public static class Config
                 AllowedGrantTypes = GrantTypes.ClientCredentials,
                 AllowedScopes = { "api1" }
             },
-            // SPA client using Resource Owner Password
+            // SPA client using Authorization Code + PKCE (secure browser-based flow)
             new Client
             {
                 ClientId = "spa",
                 ClientName = "SPA Client",
-                ClientSecrets = { new Secret("secret".Sha256()) },
-                AllowedGrantTypes = GrantTypes.ResourceOwnerPassword,
+
+                // No client secret needed for PKCE (public client)
+                RequireClientSecret = false,
+
+                AllowedGrantTypes = GrantTypes.Code,
+
+                // Redirect URIs for Next.js webapp
+                RedirectUris = {
+                    $"{clientUrl}/api/auth/callback/duende",
+                    $"{clientUrl}/callback"
+                },
+
+                // Post logout redirect URIs
+                PostLogoutRedirectUris = {
+                    $"{clientUrl}",
+                    $"{clientUrl}/signout-callback"
+                },
+
                 AllowedScopes = new List<string>
                 {
                     "openid",
@@ -73,8 +89,22 @@ public static class Config
                     "email",
                     "api1"
                 },
+
+                // Enable PKCE
+                RequirePkce = true,
+                AllowPlainTextPkce = false,
+
+                // Allow refresh tokens
                 AllowOfflineAccess = true,
-                RefreshTokenUsage = TokenUsage.ReUse
+                RefreshTokenUsage = TokenUsage.OneTimeOnly,
+                RefreshTokenExpiration = TokenExpiration.Sliding,
+
+                // Token lifetimes
+                AccessTokenLifetime = 3600, // 1 hour
+                IdentityTokenLifetime = 300, // 5 minutes
+
+                // Allow CORS for browser-based requests
+                AllowedCorsOrigins = { clientUrl }
             }
         };
     }
