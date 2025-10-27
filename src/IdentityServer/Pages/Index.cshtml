@@ -1,0 +1,20 @@
+@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Home page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome to Duende IdentityServer POC</h1>
+    <p>This is Phase 2: Interactive Login Flow</p>
+
+    <h3>Test Users:</h3>
+    <ul style="list-style: none;">
+        <li><strong>Username:</strong> alice | <strong>Password:</strong> alice</li>
+        <li><strong>Username:</strong> bob | <strong>Password:</strong> bob</li>
+    </ul>
+
+    <p class="mt-4">
+        <a href="/.well-known/openid-configuration" class="btn btn-primary">View Discovery Document</a>
+    </p>
+</div>
