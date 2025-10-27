@@ -42,13 +42,18 @@ try
     });
 
     // Add external authentication providers
+    var tenantId = builder.Configuration["AzureAd:TenantId"] ?? throw new InvalidOperationException("AzureAd:TenantId is required");
+
     builder.Services.AddAuthentication()
         .AddMicrosoftAccount("Microsoft", options =>
         {
             options.SignInScheme = Duende.IdentityServer.IdentityServerConstants.ExternalCookieAuthenticationScheme;
             options.ClientId = builder.Configuration["AzureAd:ClientId"] ?? throw new InvalidOperationException("AzureAd:ClientId is required");
             options.ClientSecret = builder.Configuration["AzureAd:ClientSecret"] ?? throw new InvalidOperationException("AzureAd:ClientSecret is required");
-            options.TenantId = builder.Configuration["AzureAd:TenantId"] ?? throw new InvalidOperationException("AzureAd:TenantId is required");
+
+            // Use tenant-specific endpoint instead of common
+            options.AuthorizationEndpoint = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/authorize";
+            options.TokenEndpoint = $"https://login.microsoftonline.com/{tenantId}/oauth2/v2.0/token";
 
             // Request additional scopes
             options.Scope.Add("openid");
